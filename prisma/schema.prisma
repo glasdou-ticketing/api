@@ -1,14 +1,39 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
 
 generator client {
   provider = "prisma-client-js"
 }
 
-datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+enum Role {
+  Admin
+  Manager
+  Staff
+  Developer
+}
+
+model User {
+  id       String @id() @default(cuid())
+  username String @unique()
+  email    String @unique()
+  password String
+  roles    Role[]
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt() @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  createdById String? @map("created_by")
+  createdBy   User?   @relation("UserCreator", fields: [createdById], references: [id])
+  creatorOf   User[]  @relation("UserCreator")
+
+  updatedById String? @map("updated_by")
+  updatedBy   User?   @relation("UserUpdater", fields: [updatedById], references: [id])
+  updaterOf   User[]  @relation("UserUpdater")
+
+  deletedById String? @map("deleted_by")
+  deletedBy   User?   @relation("UserDeleter", fields: [deletedById], references: [id])
+  deleterOf   User[]  @relation("UserDeleter")
 }
