@@ -1,15 +1,16 @@
 import { Cache, CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Body, Controller, Delete, Get, HttpStatus, Inject, Param, Patch, Post, Query } from '@nestjs/common';
 import { isUUID } from 'class-validator';
-import { User } from '@prisma/client';
+import { Role, User } from '@prisma/client';
 
-import { GetUser } from 'src/auth';
+import { Auth, GetUser } from 'src/auth';
 import { ListResponse, PaginationDto, ParseCuidPipe } from 'src/common';
 import { CreateUserDto, UpdateUserDto } from './dto';
 import { CurrentUser, UserResponse, UserSummary } from './interfaces';
 import { UserService } from './user.service';
 
 @Controller('user')
+@Auth(Role.Admin, Role.Developer, Role.Manager)
 export class UserController {
   constructor(
     private readonly usersService: UserService,
@@ -22,8 +23,8 @@ export class UserController {
   }
 
   @Post()
-  create(@Body() createUserDto: CreateUserDto): Promise<UserResponse> {
-    return this.usersService.create(createUserDto);
+  create(@Body() createUserDto: CreateUserDto, @GetUser() user: CurrentUser): Promise<UserResponse> {
+    return this.usersService.create(createUserDto, user);
   }
 
   @Get()
@@ -46,17 +47,23 @@ export class UserController {
     return this.getCachedResponse(`user:summary:${id}`, () => this.usersService.findOneWithSummary(id, user));
   }
 
-  @Patch()
-  update(@Body() updateUserDto: UpdateUserDto, @GetUser() user: CurrentUser): Promise<UserResponse> {
-    return this.usersService.update(updateUserDto, user);
+  @Patch(':id')
+  update(
+    @Param('id', ParseCuidPipe) id: string,
+    @Body() updateUserDto: UpdateUserDto,
+    @GetUser() user: CurrentUser,
+  ): Promise<UserResponse> {
+    return this.usersService.update(id, updateUserDto, user);
   }
 
   @Delete(':id')
+  @Auth(Role.Admin, Role.Developer)
   remove(@Param('id', ParseCuidPipe) id: string, @GetUser() user: CurrentUser): Promise<UserResponse> {
     return this.usersService.remove(id, user);
   }
 
   @Patch(':id/restore')
+  @Auth(Role.Admin, Role.Developer)
   restore(@Param('id', ParseCuidPipe) id: string, @GetUser() user: CurrentUser): Promise<UserResponse> {
     return this.usersService.restore(id, user);
   }

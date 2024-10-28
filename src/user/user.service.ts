@@ -38,7 +38,7 @@ export class UserService {
     this.user = this.prismaService.user;
   }
 
-  async create(createUserDto: CreateUserDto): Promise<UserResponse> {
+  async create(createUserDto: CreateUserDto, user: CurrentUser): Promise<UserResponse> {
     try {
       const { password, ...data } = createUserDto;
       this.logger.log(`Creating user: ${JSON.stringify(data)}`);
@@ -47,7 +47,10 @@ export class UserService {
 
       const hashedPassword = bcrypt.hashSync(userPassword, 10);
 
-      const newUser = await this.user.create({ data: { ...data, password: hashedPassword }, include: USER_INCLUDE });
+      const newUser = await this.user.create({
+        data: { ...data, password: hashedPassword, createdById: user.id },
+        include: USER_INCLUDE,
+      });
 
       const cleanUser = this.excludeFields(newUser);
 
@@ -145,12 +148,9 @@ export class UserService {
     return data;
   }
 
-  async update(updateUserDto: UpdateUserDto, currentUser: CurrentUser): Promise<UserResponse> {
+  async update(id: string, data: UpdateUserDto, currentUser: CurrentUser): Promise<UserResponse> {
     try {
-      this.logger.log(
-        `Updating user: ${JSON.stringify(updateUserDto)}, user: ${currentUser.id} - ${currentUser.username}`,
-      );
-      const { id, ...data } = updateUserDto;
+      this.logger.log(`Updating user: ${JSON.stringify(data)}, user: ${currentUser.id} - ${currentUser.username}`);
 
       await this.findOne(id, currentUser);
 

@@ -53,14 +53,5 @@ export class CreateUserDto {
    */
   @IsEnum(Role, { each: true })
   @IsOptional()
-  roles: Role[];
-
-  /**
-   * The ID of the user who created this user.
-   * Must be a valid UUID.
-   *
-   * @type {string}
-   */
-  @IsUUID()
-  createdById: string;
+  roles: Role[] = [Role.Staff];
 }

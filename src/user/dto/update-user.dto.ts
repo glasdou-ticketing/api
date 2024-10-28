@@ -8,15 +8,6 @@ import { IsEmail, IsEnum, IsOptional, IsString, IsStrongPassword, IsUUID, MinLen
  */
 export class UpdateUserDto {
   /**
-   * The unique identifier of the user to be updated.
-   * Must be a valid UUID.
-   *
-   * @type {string}
-   */
-  @IsUUID()
-  id: string;
-
-  /**
    * The username of the user.
    * Must be a string with a minimum length of 2 characters.
    * Transformed to be trimmed and lowercase.
@@ -41,18 +32,6 @@ export class UpdateUserDto {
   @Transform(({ value }) => value.trim().toLowerCase())
   @IsOptional()
   email?: string;
-
-  /**
-   * The password of the user.
-   * Must be a string with a minimum length of 6 characters and meet strong password criteria.
-   *
-   * @type {string}
-   */
-  @IsString()
-  @MinLength(6)
-  @IsStrongPassword()
-  @IsOptional()
-  password?: string;
 
   /**
    * The roles assigned to the user.
