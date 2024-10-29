@@ -1,0 +1,7 @@
+import 'user'
+import 'base'
+
+model Department extends BaseCatalog {
+  @@map("department")
+  user User[]
+}

@@ -1,4 +1,6 @@
 import 'base'
+import 'department'
+import 'ticket'
 
 enum Role {
   Admin
@@ -8,17 +10,28 @@ enum Role {
 }
 
 model User extends Base {
-  username  String @unique()
-  email     String @unique()
-  password  String
-  roles     Role[]
+  @@map("user")
+  username             String          @unique()
+  email                String          @unique()
+  password             String
+  roles                Role[]
 
-  createdBy User?  @relation("UserCreator", fields: [createdById], references: [id])
-  creatorOf User[] @relation("UserCreator")
+  createdBy            User?           @relation("UserCreator", fields: [createdById], references: [id])
+  creatorOf            User[]          @relation("UserCreator")
+  updatedBy            User?           @relation("UserUpdater", fields: [updatedById], references: [id])
+  updaterOf            User[]          @relation("UserUpdater")
+  deletedBy            User?           @relation("UserDeleter", fields: [deletedById], references: [id])
+  deleterOf            User[]          @relation("UserDeleter")
 
-  updatedBy User?  @relation("UserUpdater", fields: [updatedById], references: [id])
-  updaterOf User[] @relation("UserUpdater")
+  departmentId         Int
+  department           Department      @relation(fields: [departmentId], references: [id])
 
-  deletedBy User?  @relation("UserDeleter", fields: [deletedById], references: [id])
-  deleterOf User[] @relation("UserDeleter")
+  ticketCreator        Ticket[]        @relation("TicketCreator")
+  ticketUpdater        Ticket[]        @relation("TicketUpdater")
+  ticketDeleter        Ticket[]        @relation("TicketDeleter")
+  ticketCommentCreator TicketComment[] @relation("TicketCommentCreator")
+  ticketCommentUpdater TicketComment[] @relation("TicketCommentUpdater")
+  ticketCommentDeleter TicketComment[] @relation("TicketCommentDeleter")
+  ticketLogCreator     TicketLog[]     @relation("TicketLogCreator")
+  ticketLogDeleter     TicketLog[]     @relation("TicketLogDeleter")
 }

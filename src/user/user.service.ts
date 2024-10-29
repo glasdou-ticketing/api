@@ -17,13 +17,19 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateUserDto, UpdateUserDto } from './dto';
 import { CurrentUser, UserResponse, UserSummary } from './interfaces';
 
-const USER_INCLUDE = {
-  createdBy: { select: { id: true, username: true, email: true } },
+const USER_INCLUDE_ONE = {
   updatedBy: { select: { id: true, username: true, email: true } },
   deletedBy: { select: { id: true, username: true, email: true } },
+  createdBy: { select: { id: true, username: true, email: true } },
+  department: { select: { id: true, name: true } },
 };
 
-const EXCLUDE_FIELDS: (keyof User)[] = ['password', 'createdById', 'updatedById', 'deletedById'];
+const USER_INCLUDE_LIST = {
+  createdBy: { select: { id: true, username: true, email: true } },
+  department: { select: { id: true, name: true } },
+};
+
+const EXCLUDE_FIELDS: (keyof User)[] = ['password', 'createdById', 'updatedById', 'deletedById', 'departmentId'];
 
 @Injectable()
 export class UserService {
@@ -49,7 +55,7 @@ export class UserService {
 
       const newUser = await this.user.create({
         data: { ...data, password: hashedPassword, createdById: user.id },
-        include: USER_INCLUDE,
+        include: USER_INCLUDE_ONE,
       });
 
       const cleanUser = this.excludeFields(newUser);
@@ -81,7 +87,7 @@ export class UserService {
         skip: (page - 1) * limit,
         where,
         orderBy: { createdAt: 'desc' },
-        include: USER_INCLUDE,
+        include: USER_INCLUDE_LIST,
       }),
       this.user.count({ where }),
     ]);
@@ -100,7 +106,7 @@ export class UserService {
 
     const where = isAdmin ? { id } : { id, deletedAt: null };
 
-    const user = await this.user.findFirst({ where, include: USER_INCLUDE });
+    const user = await this.user.findFirst({ where, include: USER_INCLUDE_ONE });
 
     if (!user)
       throw new NotFoundException({ status: HttpStatus.NOT_FOUND, message: `[ERROR] User with id ${id} not found` });
@@ -113,7 +119,7 @@ export class UserService {
     const idAdmin = hasRoles(currentUser.roles, [Role.Admin]);
     const where = idAdmin ? { username } : { username, deletedAt: null };
 
-    const user = await this.user.findFirst({ where, include: USER_INCLUDE });
+    const user = await this.user.findFirst({ where, include: USER_INCLUDE_ONE });
 
     if (!user)
       throw new NotFoundException({
@@ -157,7 +163,7 @@ export class UserService {
       const updatedUser = await this.user.update({
         where: { id },
         data: { ...data, updatedById: currentUser.id },
-        include: USER_INCLUDE,
+        include: USER_INCLUDE_ONE,
       });
 
       this.clearCache();
@@ -183,7 +189,7 @@ export class UserService {
       const updatedUser = await this.user.update({
         where: { id },
         data: { deletedAt: new Date(), deletedById: currentUser.id },
-        include: USER_INCLUDE,
+        include: USER_INCLUDE_ONE,
       });
 
       this.clearCache();
@@ -208,7 +214,7 @@ export class UserService {
       const updatedUser = await this.user.update({
         where: { id },
         data: { deletedAt: null, deletedById: null, updatedById: currentUser.id },
-        include: USER_INCLUDE,
+        include: USER_INCLUDE_ONE,
       });
 
       this.clearCache();

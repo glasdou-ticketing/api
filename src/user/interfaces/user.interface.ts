@@ -1,3 +1,5 @@
+import { Catalog } from 'src/common/interfaces';
+
 export enum Role {
   Admin = 'Admin',
   Manager = 'Manager',
@@ -27,6 +29,7 @@ export interface UserResponse {
   updatedBy: UserSummary | null;
   deletedBy: UserSummary | null;
   password?: string;
+  department: Catalog;
 }
 
 export interface UserSummary {

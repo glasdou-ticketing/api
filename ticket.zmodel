@@ -1,0 +1,64 @@
+import "base"
+import "user"
+
+model Ticket extends Base {
+  @@map("ticket")
+  title       String          @db.VarChar(500)
+  description String          @db.Text
+
+  categoryId  Int
+  category    TicketCategory  @relation(fields: [categoryId], references: [id])
+  priorityId  Int
+  priority    TicketPriority  @relation(fields: [priorityId], references: [id])
+  statusId    Int
+  status      TicketStatus    @relation(fields: [statusId], references: [id])
+  comments    TicketComment[]
+  logs        TicketLog[]
+
+  createdBy   User            @relation("TicketCreator", fields: [createdById], references: [id])
+  updatedBy   User?           @relation("TicketUpdater", fields: [updatedById], references: [id])
+  deletedBy   User?           @relation("TicketDeleter", fields: [deletedById], references: [id])
+}
+
+model TicketCategory extends BaseCatalog {
+  @@map("ticket_category")
+  ticket Ticket[]
+}
+
+model TicketPriority extends BaseCatalog {
+  @@map("ticket_priority")
+  ticket Ticket[]
+}
+
+model TicketComment extends Base {
+  @@map("ticket_comment")
+  ticketId  String
+  ticket    Ticket @relation(fields: [ticketId], references: [id])
+
+  comment   String
+  createdBy User   @relation("TicketCommentCreator", fields: [createdById], references: [id])
+  updatedBy User?  @relation("TicketCommentUpdater", fields: [updatedById], references: [id])
+  deletedBy User?  @relation("TicketCommentDeleter", fields: [deletedById], references: [id])
+}
+
+model TicketStatus extends BaseCatalog {
+  @@map("ticket_status")
+  ticket Ticket[]
+}
+
+model TicketLog extends BaseLog {
+  @@map("ticket_log")
+  message   String
+
+  ticketId  String
+  ticket    Ticket        @relation(fields: [ticketId], references: [id])
+  logTypeId Int
+  logType   TicketLogType @relation(fields: [logTypeId], references: [id])
+  createdBy User          @relation("TicketLogCreator", fields: [createdById], references: [id])
+  deletedBy User?         @relation("TicketLogDeleter", fields: [deletedById], references: [id])
+}
+
+model TicketLogType extends BaseCatalog {
+  @@map("ticket_log_type")
+  ticketLog TicketLog[]
+}

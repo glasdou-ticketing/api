@@ -1,6 +1,17 @@
 import { Role } from '@prisma/client';
 import { Transform } from 'class-transformer';
-import { IsEmail, IsEnum, IsOptional, IsString, IsStrongPassword, IsUUID, MinLength } from 'class-validator';
+import {
+  IsEmail,
+  IsEnum,
+  IsNumber,
+  IsOptional,
+  IsPositive,
+  isPositive,
+  IsString,
+  IsStrongPassword,
+  IsUUID,
+  MinLength,
+} from 'class-validator';
 
 /**
  * Data Transfer Object (DTO) for creating a new user.
@@ -54,4 +65,8 @@ export class CreateUserDto {
   @IsEnum(Role, { each: true })
   @IsOptional()
   roles: Role[] = [Role.Staff];
+
+  @IsNumber()
+  @IsPositive()
+  departmentId: number;
 }

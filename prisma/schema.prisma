@@ -20,21 +20,133 @@ enum Role {
 }
 
 model User {
+  id                   String          @id() @default(cuid())
+  createdAt            DateTime        @default(now()) @map("created_at")
+  updatedAt            DateTime        @updatedAt() @map("updated_at")
+  deletedAt            DateTime?       @map("deleted_at")
+  createdById          String          @map("created_by_id")
+  updatedById          String?         @map("updated_by_id")
+  deletedById          String?         @map("deleted_by_id")
+  username             String          @unique()
+  email                String          @unique()
+  password             String
+  roles                Role[]
+  createdBy            User?           @relation("UserCreator", fields: [createdById], references: [id])
+  creatorOf            User[]          @relation("UserCreator")
+  updatedBy            User?           @relation("UserUpdater", fields: [updatedById], references: [id])
+  updaterOf            User[]          @relation("UserUpdater")
+  deletedBy            User?           @relation("UserDeleter", fields: [deletedById], references: [id])
+  deleterOf            User[]          @relation("UserDeleter")
+  departmentId         Int
+  department           Department      @relation(fields: [departmentId], references: [id])
+  ticketCreator        Ticket[]        @relation("TicketCreator")
+  ticketUpdater        Ticket[]        @relation("TicketUpdater")
+  ticketDeleter        Ticket[]        @relation("TicketDeleter")
+  ticketCommentCreator TicketComment[] @relation("TicketCommentCreator")
+  ticketCommentUpdater TicketComment[] @relation("TicketCommentUpdater")
+  ticketCommentDeleter TicketComment[] @relation("TicketCommentDeleter")
+  ticketLogCreator     TicketLog[]     @relation("TicketLogCreator")
+  ticketLogDeleter     TicketLog[]     @relation("TicketLogDeleter")
+
+  @@map("user")
+}
+
+model Department {
+  id   Int    @id() @default(autoincrement())
+  name String @db.VarChar(500)
+  user User[]
+
+  @@map("department")
+}
+
+model Ticket {
+  id          String          @id() @default(cuid())
+  createdAt   DateTime        @default(now()) @map("created_at")
+  updatedAt   DateTime        @updatedAt() @map("updated_at")
+  deletedAt   DateTime?       @map("deleted_at")
+  createdById String          @map("created_by_id")
+  updatedById String?         @map("updated_by_id")
+  deletedById String?         @map("deleted_by_id")
+  title       String          @db.VarChar(500)
+  description String          @db.Text()
+  categoryId  Int
+  category    TicketCategory  @relation(fields: [categoryId], references: [id])
+  priorityId  Int
+  priority    TicketPriority  @relation(fields: [priorityId], references: [id])
+  statusId    Int
+  status      TicketStatus    @relation(fields: [statusId], references: [id])
+  comments    TicketComment[]
+  logs        TicketLog[]
+  createdBy   User            @relation("TicketCreator", fields: [createdById], references: [id])
+  updatedBy   User?           @relation("TicketUpdater", fields: [updatedById], references: [id])
+  deletedBy   User?           @relation("TicketDeleter", fields: [deletedById], references: [id])
+
+  @@map("ticket")
+}
+
+model TicketCategory {
+  id     Int      @id() @default(autoincrement())
+  name   String   @db.VarChar(500)
+  ticket Ticket[]
+
+  @@map("ticket_category")
+}
+
+model TicketPriority {
+  id     Int      @id() @default(autoincrement())
+  name   String   @db.VarChar(500)
+  ticket Ticket[]
+
+  @@map("ticket_priority")
+}
+
+model TicketComment {
   id          String    @id() @default(cuid())
   createdAt   DateTime  @default(now()) @map("created_at")
   updatedAt   DateTime  @updatedAt() @map("updated_at")
   deletedAt   DateTime? @map("deleted_at")
-  createdById String?   @map("created_by")
-  updatedById String?   @map("updated_by")
-  deletedById String?   @map("deleted_by")
-  username    String    @unique()
-  email       String    @unique()
-  password    String
-  roles       Role[]
-  createdBy   User?     @relation("UserCreator", fields: [createdById], references: [id])
-  creatorOf   User[]    @relation("UserCreator")
-  updatedBy   User?     @relation("UserUpdater", fields: [updatedById], references: [id])
-  updaterOf   User[]    @relation("UserUpdater")
-  deletedBy   User?     @relation("UserDeleter", fields: [deletedById], references: [id])
-  deleterOf   User[]    @relation("UserDeleter")
+  createdById String    @map("created_by_id")
+  updatedById String?   @map("updated_by_id")
+  deletedById String?   @map("deleted_by_id")
+  ticketId    String
+  ticket      Ticket    @relation(fields: [ticketId], references: [id])
+  comment     String
+  createdBy   User      @relation("TicketCommentCreator", fields: [createdById], references: [id])
+  updatedBy   User?     @relation("TicketCommentUpdater", fields: [updatedById], references: [id])
+  deletedBy   User?     @relation("TicketCommentDeleter", fields: [deletedById], references: [id])
+
+  @@map("ticket_comment")
+}
+
+model TicketStatus {
+  id     Int      @id() @default(autoincrement())
+  name   String   @db.VarChar(500)
+  ticket Ticket[]
+
+  @@map("ticket_status")
+}
+
+model TicketLog {
+  id          String        @id() @default(cuid())
+  createdAt   DateTime      @default(now()) @map("created_at")
+  deletedAt   DateTime?     @map("deleted_at")
+  createdById String        @map("created_by_id")
+  deletedById String        @map("deleted_by_id")
+  message     String
+  ticketId    String
+  ticket      Ticket        @relation(fields: [ticketId], references: [id])
+  logTypeId   Int
+  logType     TicketLogType @relation(fields: [logTypeId], references: [id])
+  createdBy   User          @relation("TicketLogCreator", fields: [createdById], references: [id])
+  deletedBy   User?         @relation("TicketLogDeleter", fields: [deletedById], references: [id])
+
+  @@map("ticket_log")
+}
+
+model TicketLogType {
+  id        Int         @id() @default(autoincrement())
+  name      String      @db.VarChar(500)
+  ticketLog TicketLog[]
+
+  @@map("ticket_log_type")
 }

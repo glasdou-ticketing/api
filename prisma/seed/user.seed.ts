@@ -1,9 +1,8 @@
 import * as bcrypt from 'bcrypt';
 import { PrismaClient, Role } from '@prisma/client';
+import { Departments } from 'src/common/interfaces';
 
-const prisma = new PrismaClient();
-
-const main = async () => {
+export const userSeed = async (prisma: PrismaClient) => {
   await prisma.user.upsert({
     where: { id: 'cm2t3swzl000d0cjw07z1dthj' },
     update: {
@@ -15,6 +14,8 @@ const main = async () => {
       email: 'dev@google.com',
       password: bcrypt.hashSync('Dev@123', 10),
       roles: [Role.Developer],
+      createdById: 'cm2t3swzl000d0cjw07z1dthj',
+      departmentId: 2, // Engineering
     },
   });
 
@@ -31,6 +32,7 @@ const main = async () => {
       roles: [Role.Admin],
       createdById: 'cm2t3swzl000d0cjw07z1dthj',
       updatedById: 'cm2t3swzl000d0cjw07z1dthj',
+      departmentId: 2, // Engineering
     },
   });
 
@@ -47,6 +49,7 @@ const main = async () => {
       roles: [Role.Staff],
       createdById: 'cm2t3swzl000d0cjw07z1dthj',
       updatedById: 'cm2t3swzl000d0cjw07z1dthj',
+      departmentId: 2, // Engineering
     },
   });
 
@@ -63,16 +66,7 @@ const main = async () => {
       roles: [Role.Manager],
       createdById: 'cm2t3swzl000d0cjw07z1dthj',
       updatedById: 'cm2t3swzl000d0cjw07z1dthj',
+      departmentId: 2, // Engineering
     },
   });
 };
-
-main()
-  .finally(async () => {
-    await prisma.$disconnect();
-  })
-  .catch(async (e) => {
-    console.error(e);
-    await prisma.$disconnect();
-    process.exit(1);
-  });
