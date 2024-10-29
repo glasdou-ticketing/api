@@ -31,4 +31,9 @@ export class TicketController {
   remove(@Param('id') id: string) {
     return this.ticketService.remove(+id);
   }
+
+  @Patch(':id/restore')
+  restore(@Param('id') id: string) {
+    return this.ticketService.restore(+id);
+  }
 }

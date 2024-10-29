@@ -23,4 +23,8 @@ export class TicketService {
   remove(id: number) {
     return `This action removes a #${id} ticket`;
   }
+
+  restore(arg0: number) {
+    throw new Error('Method not implemented.');
+  }
 }
