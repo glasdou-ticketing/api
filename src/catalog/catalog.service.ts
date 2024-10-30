@@ -1,9 +1,9 @@
-import { CACHE_MANAGER } from '@nestjs/cache-manager';
-import { Inject, Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { PaginationDto } from 'src/common';
 
 import { ExceptionHandler } from 'src/helpers';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { CurrentUser } from 'src/user';
 
 @Injectable()
 export class CatalogService {
@@ -12,7 +12,8 @@ export class CatalogService {
 
   constructor(private readonly prisma: PrismaService) {}
 
-  async getDepartments(pagination: PaginationDto) {
+  async getDepartments(pagination: PaginationDto, user: CurrentUser) {
+    this.logger.log(`Fetching departments: ${JSON.stringify(pagination)}, user: ${user.id} - ${user.username}`);
     const { page, limit } = pagination;
 
     const [data, total] = await Promise.all([
