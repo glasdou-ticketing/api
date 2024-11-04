@@ -1,4 +1,4 @@
-import { Catalog } from 'src/common/interfaces';
+import { Catalog } from 'src/catalog/interfaces';
 
 export enum Role {
   Admin = 'Admin',
@@ -15,6 +15,7 @@ export interface CurrentUser {
   createdAt: Date;
   updateAt: Date;
   deletedAt?: Date;
+  departmentId: number;
 }
 
 export interface UserResponse {

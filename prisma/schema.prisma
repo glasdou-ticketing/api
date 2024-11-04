@@ -52,34 +52,37 @@ model User {
 }
 
 model Department {
-  id   Int    @id() @default(autoincrement())
-  name String @db.VarChar(500)
-  user User[]
+  id     Int      @id() @default(autoincrement())
+  name   String   @db.VarChar(500)
+  user   User[]
+  ticket Ticket[]
 
   @@map("department")
 }
 
 model Ticket {
-  id          String          @id() @default(cuid())
-  createdAt   DateTime        @default(now()) @map("created_at")
-  updatedAt   DateTime        @updatedAt() @map("updated_at")
-  deletedAt   DateTime?       @map("deleted_at")
-  createdById String          @map("created_by_id")
-  updatedById String?         @map("updated_by_id")
-  deletedById String?         @map("deleted_by_id")
-  title       String          @db.VarChar(500)
-  description String          @db.Text()
-  categoryId  Int
-  category    TicketCategory  @relation(fields: [categoryId], references: [id])
-  priorityId  Int
-  priority    TicketPriority  @relation(fields: [priorityId], references: [id])
-  statusId    Int
-  status      TicketStatus    @relation(fields: [statusId], references: [id])
-  comments    TicketComment[]
-  logs        TicketLog[]
-  createdBy   User            @relation("TicketCreator", fields: [createdById], references: [id])
-  updatedBy   User?           @relation("TicketUpdater", fields: [updatedById], references: [id])
-  deletedBy   User?           @relation("TicketDeleter", fields: [deletedById], references: [id])
+  id           String          @id() @default(cuid())
+  createdAt    DateTime        @default(now()) @map("created_at")
+  updatedAt    DateTime        @updatedAt() @map("updated_at")
+  deletedAt    DateTime?       @map("deleted_at")
+  createdById  String          @map("created_by_id")
+  updatedById  String?         @map("updated_by_id")
+  deletedById  String?         @map("deleted_by_id")
+  title        String          @db.VarChar(500)
+  description  String          @db.Text()
+  categoryId   Int
+  category     TicketCategory  @relation(fields: [categoryId], references: [id])
+  priorityId   Int
+  priority     TicketPriority  @relation(fields: [priorityId], references: [id])
+  statusId     Int
+  status       TicketStatus    @relation(fields: [statusId], references: [id])
+  comments     TicketComment[]
+  logs         TicketLog[]
+  departmentId Int
+  department   Department      @relation(fields: [departmentId], references: [id])
+  createdBy    User            @relation("TicketCreator", fields: [createdById], references: [id])
+  updatedBy    User?           @relation("TicketUpdater", fields: [updatedById], references: [id])
+  deletedBy    User?           @relation("TicketDeleter", fields: [deletedById], references: [id])
 
   @@map("ticket")
 }

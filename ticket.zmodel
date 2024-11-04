@@ -1,23 +1,26 @@
 import "base"
 import "user"
+import "department"
 
 model Ticket extends Base {
   @@map("ticket")
-  title       String          @db.VarChar(500)
-  description String          @db.Text
+  title        String          @db.VarChar(500)
+  description  String          @db.Text
 
-  categoryId  Int
-  category    TicketCategory  @relation(fields: [categoryId], references: [id])
-  priorityId  Int
-  priority    TicketPriority  @relation(fields: [priorityId], references: [id])
-  statusId    Int
-  status      TicketStatus    @relation(fields: [statusId], references: [id])
-  comments    TicketComment[]
-  logs        TicketLog[]
+  categoryId   Int
+  category     TicketCategory  @relation(fields: [categoryId], references: [id])
+  priorityId   Int
+  priority     TicketPriority  @relation(fields: [priorityId], references: [id])
+  statusId     Int
+  status       TicketStatus    @relation(fields: [statusId], references: [id])
+  comments     TicketComment[]
+  logs         TicketLog[]
+  departmentId Int
+  department   Department      @relation(fields: [departmentId], references: [id])
 
-  createdBy   User            @relation("TicketCreator", fields: [createdById], references: [id])
-  updatedBy   User?           @relation("TicketUpdater", fields: [updatedById], references: [id])
-  deletedBy   User?           @relation("TicketDeleter", fields: [deletedById], references: [id])
+  createdBy    User            @relation("TicketCreator", fields: [createdById], references: [id])
+  updatedBy    User?           @relation("TicketUpdater", fields: [updatedById], references: [id])
+  deletedBy    User?           @relation("TicketDeleter", fields: [deletedById], references: [id])
 }
 
 model TicketCategory extends BaseCatalog {

@@ -1,7 +1,10 @@
 import 'user'
 import 'base'
+import 'ticket'
 
 model Department extends BaseCatalog {
   @@map("department")
-  user User[]
+  user   User[]
+
+  ticket Ticket[]
 }
