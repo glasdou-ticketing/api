@@ -3,7 +3,7 @@ export interface Catalog {
   name: string;
 }
 
-export enum Departments {
+export enum Department {
   HumanResources = 1,
   Engineering = 2,
   Marketing = 3,
@@ -11,7 +11,7 @@ export enum Departments {
   CustomerSupport = 5,
 }
 
-export enum TicketCategories {
+export enum TicketCategory {
   Bug = 1,
   FeatureRequest = 2,
   Question = 3,
@@ -19,14 +19,14 @@ export enum TicketCategories {
   Other = 5,
 }
 
-export enum TicketPriorities {
+export enum TicketPriority {
   Low = 1,
   Medium = 2,
   High = 3,
   Critical = 4,
 }
 
-export enum TicketStatuses {
+export enum TicketStatus {
   Open = 1,
   InProgress = 2,
   Resolved = 3,

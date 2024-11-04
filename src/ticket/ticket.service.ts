@@ -1,11 +1,36 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Role, Ticket } from '@prisma/client';
 
-import { PaginationDto } from 'src/common';
-import { ExceptionHandler, hasRoles } from 'src/helpers';
+import { ListResponse, PaginationDto } from 'src/common';
+import { ExceptionHandler, hasRoles, ObjectManipulator } from 'src/helpers';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CurrentUser } from 'src/user';
 import { CreateTicketDto, UpdateTicketDto } from './dto';
-import { Role } from '@prisma/client';
+import { TicketResponse } from './interfaces/ticket.interface';
+
+const TICKET_INCLUDE_ONE = {
+  createdBy: { select: { id: true, username: true, email: true } },
+  department: { select: { name: true, id: true } },
+  category: { select: { name: true, id: true } },
+  priority: { select: { name: true, id: true } },
+  status: { select: { name: true, id: true } },
+};
+
+const TICKET_INCLUDE_LIST = {
+  ...TICKET_INCLUDE_ONE,
+  updatedBy: { select: { id: true, username: true, email: true } },
+  deletedBy: { select: { id: true, username: true, email: true } },
+};
+
+const EXCLUDE_FIELDS: (keyof Ticket)[] = [
+  'createdById',
+  'updatedById',
+  'deletedById',
+  'departmentId',
+  'categoryId',
+  'priorityId',
+  'statusId',
+];
 
 @Injectable()
 export class TicketService {
@@ -14,42 +39,126 @@ export class TicketService {
 
   constructor(private readonly prisma: PrismaService) {}
 
-  create(createTicketDto: CreateTicketDto) {
-    return 'This action adds a new ticket';
+  async create(createTicketDto: CreateTicketDto, user: CurrentUser): Promise<TicketResponse> {
+    this.logger.log(`Creating ticket: ${JSON.stringify(createTicketDto)}, user: ${user.id} - ${user.username}`);
+    try {
+      const departmentId = createTicketDto.departmentId || user.departmentId;
+
+      const newTicket = await this.prisma.ticket.create({
+        data: {
+          ...createTicketDto,
+          departmentId,
+          createdById: user.id,
+          updatedById: user.id,
+        },
+        include: {
+          ...TICKET_INCLUDE_ONE,
+        },
+      });
+
+      return this.excludeFields(newTicket);
+    } catch (error) {
+      this.exHandler.process(error);
+    }
   }
 
-  async findAll(pagination: PaginationDto, user: CurrentUser) {
+  async findAll(pagination: PaginationDto, user: CurrentUser): Promise<ListResponse<Ticket>> {
+    this.logger.log(`Fetching tickets: ${JSON.stringify(pagination)}, user: ${user.id} - ${user.username}`);
+
     const { page, limit } = pagination;
-    const isAdmin = hasRoles(user.roles, [Role.Admin, Role.Developer]);
-    const where = isAdmin ? {} : { deletedAt: null };
+    const where = this.handleWhere(user);
 
     const [data, total] = await Promise.all([
       this.prisma.ticket.findMany({
         take: limit,
         skip: (page - 1) * limit,
         where,
+        include: TICKET_INCLUDE_ONE,
       }),
       this.prisma.ticket.count({ where }),
     ]);
 
     const lastPage = Math.ceil(total / limit);
 
-    return { meta: { total, page, lastPage }, data };
+    return { meta: { total, page, lastPage }, data: data.map(this.excludeFields) };
   }
 
-  findOne(id: string) {
-    return `This action returns a #${id} ticket`;
+  async findOne(id: string, user: CurrentUser) {
+    const where = this.handleWhere(user);
+
+    const ticket = await this.prisma.ticket.findFirst({
+      where: { id, ...where },
+      include: TICKET_INCLUDE_ONE,
+    });
+
+    if (!ticket) throw new NotFoundException({ status: 404, message: `[ERROR] Ticket with id ${id} not found` });
+
+    return this.excludeFields(ticket);
   }
 
-  update(id: string, updateTicketDto: UpdateTicketDto) {
-    return `This action updates a #${id} ticket`;
+  async update(id: string, updateTicketDto: UpdateTicketDto, user: CurrentUser) {
+    this.logger.log(`Updating ticket: ${id}, ${JSON.stringify(updateTicketDto)}, user: ${user.id} - ${user.username}`);
+    try {
+      await this.findOne(id, user);
+
+      const updatedTicket = await this.prisma.ticket.update({
+        where: { id },
+        data: { ...updateTicketDto, updatedById: user.id },
+        include: TICKET_INCLUDE_ONE,
+      });
+
+      return this.excludeFields(updatedTicket);
+    } catch (error) {
+      this.exHandler.process(error);
+    }
   }
 
-  remove(id: string) {
-    return `This action removes a #${id} ticket`;
+  async remove(id: string, user: CurrentUser) {
+    this.logger.log(`Deleting ticket: ${id}, user: ${user.id} - ${user.username}`);
+    try {
+      await this.findOne(id, user);
+
+      const updatedTicket = await this.prisma.ticket.update({
+        where: { id },
+        data: { deletedAt: new Date(), deletedById: user.id },
+        include: TICKET_INCLUDE_ONE,
+      });
+
+      return this.excludeFields(updatedTicket);
+    } catch (error) {
+      this.exHandler.process(error);
+    }
   }
 
-  restore(id: string) {
-    throw new Error('Method not implemented.');
+  async restore(id: string, user: CurrentUser) {
+    this.logger.log(`Restoring ticket: ${id}, user: ${user.id} - ${user.username}`);
+    try {
+      await this.findOne(id, user);
+
+      const updatedTicket = await this.prisma.ticket.update({
+        where: { id },
+        data: { deletedAt: null, deletedById: null, updatedById: user.id },
+        include: TICKET_INCLUDE_ONE,
+      });
+
+      return this.excludeFields(updatedTicket);
+    } catch (error) {
+      this.exHandler.process(error);
+    }
+  }
+
+  private handleWhere(user: CurrentUser): Partial<Ticket> {
+    // Admins and Developers can see all tickets
+    if (hasRoles(user.roles, [Role.Admin, Role.Developer])) return {};
+
+    // Managers can see tickets in their department that are not deleted
+    if (hasRoles(user.roles, [Role.Manager])) return { deletedAt: null, departmentId: user.departmentId };
+
+    // All other users can see their own tickets that are not deleted
+    return { deletedAt: null, createdById: user.id };
+  }
+
+  private excludeFields(ticket: Ticket): TicketResponse {
+    return ObjectManipulator.exclude<Ticket>(ticket, EXCLUDE_FIELDS) as TicketResponse;
   }
 }

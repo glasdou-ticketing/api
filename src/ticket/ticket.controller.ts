@@ -12,8 +12,8 @@ export class TicketController {
   constructor(private readonly ticketService: TicketService) {}
 
   @Post()
-  create(@Body() createTicketDto: CreateTicketDto) {
-    return this.ticketService.create(createTicketDto);
+  create(@Body() createTicketDto: CreateTicketDto, @GetUser() user: CurrentUser) {
+    return this.ticketService.create(createTicketDto, user);
   }
 
   @Get()
@@ -22,22 +22,26 @@ export class TicketController {
   }
 
   @Get(':id')
-  findOne(@Param('id', ParseCuidPipe) id: string) {
-    return this.ticketService.findOne(id);
+  findOne(@Param('id', ParseCuidPipe) id: string, @GetUser() user: CurrentUser) {
+    return this.ticketService.findOne(id, user);
   }
 
   @Patch(':id')
-  update(@Param('id', ParseCuidPipe) id: string, @Body() updateTicketDto: UpdateTicketDto) {
-    return this.ticketService.update(id, updateTicketDto);
+  update(
+    @Param('id', ParseCuidPipe) id: string,
+    @Body() updateTicketDto: UpdateTicketDto,
+    @GetUser() user: CurrentUser,
+  ) {
+    return this.ticketService.update(id, updateTicketDto, user);
   }
 
   @Delete(':id')
-  remove(@Param('id', ParseCuidPipe) id: string) {
-    return this.ticketService.remove(id);
+  remove(@Param('id', ParseCuidPipe) id: string, @GetUser() user: CurrentUser) {
+    return this.ticketService.remove(id, user);
   }
 
   @Patch(':id/restore')
-  restore(@Param('id', ParseCuidPipe) id: string) {
-    return this.ticketService.restore(id);
+  restore(@Param('id', ParseCuidPipe) id: string, @GetUser() user: CurrentUser) {
+    return this.ticketService.restore(id, user);
   }
 }
