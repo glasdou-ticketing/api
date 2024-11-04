@@ -1,4 +1,4 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { ConflictException, HttpStatus, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { Role, Ticket } from '@prisma/client';
 
 import { ListResponse, PaginationDto } from 'src/common';
@@ -8,7 +8,7 @@ import { CurrentUser } from 'src/user';
 import { CreateTicketDto, UpdateTicketDto } from './dto';
 import { TicketResponse } from './interfaces/ticket.interface';
 
-const TICKET_INCLUDE_ONE = {
+const TICKET_INCLUDE_LIST = {
   createdBy: { select: { id: true, username: true, email: true } },
   department: { select: { name: true, id: true } },
   category: { select: { name: true, id: true } },
@@ -16,8 +16,8 @@ const TICKET_INCLUDE_ONE = {
   status: { select: { name: true, id: true } },
 };
 
-const TICKET_INCLUDE_LIST = {
-  ...TICKET_INCLUDE_ONE,
+const TICKET_INCLUDE_ONE = {
+  ...TICKET_INCLUDE_LIST,
   updatedBy: { select: { id: true, username: true, email: true } },
   deletedBy: { select: { id: true, username: true, email: true } },
 };
@@ -51,9 +51,7 @@ export class TicketService {
           createdById: user.id,
           updatedById: user.id,
         },
-        include: {
-          ...TICKET_INCLUDE_ONE,
-        },
+        include: TICKET_INCLUDE_ONE,
       });
 
       return this.excludeFields(newTicket);
@@ -73,7 +71,7 @@ export class TicketService {
         take: limit,
         skip: (page - 1) * limit,
         where,
-        include: TICKET_INCLUDE_ONE,
+        include: TICKET_INCLUDE_LIST,
       }),
       this.prisma.ticket.count({ where }),
     ]);
@@ -116,7 +114,13 @@ export class TicketService {
   async remove(id: string, user: CurrentUser) {
     this.logger.log(`Deleting ticket: ${id}, user: ${user.id} - ${user.username}`);
     try {
-      await this.findOne(id, user);
+      const ticket = await this.findOne(id, user);
+
+      if (ticket.deletedAt !== null)
+        throw new ConflictException({
+          status: HttpStatus.CONFLICT,
+          message: `[ERROR] Ticket with id ${id} is already disabled`,
+        });
 
       const updatedTicket = await this.prisma.ticket.update({
         where: { id },
@@ -133,7 +137,13 @@ export class TicketService {
   async restore(id: string, user: CurrentUser) {
     this.logger.log(`Restoring ticket: ${id}, user: ${user.id} - ${user.username}`);
     try {
-      await this.findOne(id, user);
+      const ticket = await this.findOne(id, user);
+
+      if (ticket.deletedAt === null)
+        throw new ConflictException({
+          status: HttpStatus.CONFLICT,
+          message: `[ERROR] Ticket with id ${id} is already enabled`,
+        });
 
       const updatedTicket = await this.prisma.ticket.update({
         where: { id },
