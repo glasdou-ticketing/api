@@ -56,6 +56,7 @@ CREATE TABLE "ticket" (
     "categoryId" INTEGER NOT NULL,
     "priorityId" INTEGER NOT NULL,
     "statusId" INTEGER NOT NULL,
+    "departmentId" INTEGER NOT NULL,
 
     CONSTRAINT "ticket_pkey" PRIMARY KEY ("id")
 );
@@ -105,7 +106,7 @@ CREATE TABLE "ticket_log" (
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "deleted_at" TIMESTAMP(3),
     "created_by_id" TEXT NOT NULL,
-    "deleted_by_id" TEXT NOT NULL,
+    "deleted_by_id" TEXT,
     "message" TEXT NOT NULL,
     "ticketId" TEXT NOT NULL,
     "logTypeId" INTEGER NOT NULL,
@@ -149,6 +150,9 @@ ALTER TABLE "ticket" ADD CONSTRAINT "ticket_priorityId_fkey" FOREIGN KEY ("prior
 ALTER TABLE "ticket" ADD CONSTRAINT "ticket_statusId_fkey" FOREIGN KEY ("statusId") REFERENCES "ticket_status"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "ticket" ADD CONSTRAINT "ticket_departmentId_fkey" FOREIGN KEY ("departmentId") REFERENCES "department"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "ticket" ADD CONSTRAINT "ticket_created_by_id_fkey" FOREIGN KEY ("created_by_id") REFERENCES "user"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
@@ -179,4 +183,4 @@ ALTER TABLE "ticket_log" ADD CONSTRAINT "ticket_log_logTypeId_fkey" FOREIGN KEY 
 ALTER TABLE "ticket_log" ADD CONSTRAINT "ticket_log_created_by_id_fkey" FOREIGN KEY ("created_by_id") REFERENCES "user"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "ticket_log" ADD CONSTRAINT "ticket_log_deleted_by_id_fkey" FOREIGN KEY ("deleted_by_id") REFERENCES "user"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "ticket_log" ADD CONSTRAINT "ticket_log_deleted_by_id_fkey" FOREIGN KEY ("deleted_by_id") REFERENCES "user"("id") ON DELETE SET NULL ON UPDATE CASCADE;

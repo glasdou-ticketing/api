@@ -6,4 +6,15 @@ export const ticketPriorities = ['Low', 'Medium', 'High', 'Critical'];
 
 export const ticketStatuses = ['Open', 'In Progress', 'Resolved', 'Closed', 'Reopened'];
 
-export const ticketLogType = ['Comment', 'Status Change', 'Priority Change', 'Category Change', 'Assignee Change'];
+export const ticketLogType = [
+  'Comment',
+  'Status Change',
+  'Priority Change',
+  'Category Change',
+  'Assignee Change',
+  'Attachment',
+  'Created',
+  'Updated',
+  'Deleted',
+  'Restored',
+];

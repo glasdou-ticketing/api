@@ -6,7 +6,8 @@ import { ExceptionHandler, hasRoles, ObjectManipulator } from 'src/helpers';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CurrentUser } from 'src/user';
 import { CreateTicketDto, UpdateTicketDto } from './dto';
-import { TicketResponse } from './interfaces/ticket.interface';
+import { CreateTicketLog, TicketResponse } from './interfaces/ticket.interface';
+import { TicketLogType } from 'src/catalog/interfaces';
 
 const TICKET_INCLUDE_LIST = {
   createdBy: { select: { id: true, username: true, email: true } },
@@ -50,6 +51,13 @@ export class TicketService {
           departmentId,
           createdById: user.id,
           updatedById: user.id,
+          logs: {
+            create: {
+              message: `Ticket created by ${user.username}`,
+              createdById: user.id,
+              logTypeId: TicketLogType.Created,
+            },
+          },
         },
         include: TICKET_INCLUDE_ONE,
       });
@@ -99,11 +107,19 @@ export class TicketService {
     try {
       await this.findOne(id, user);
 
-      const updatedTicket = await this.prisma.ticket.update({
-        where: { id },
-        data: { ...updateTicketDto, updatedById: user.id },
-        include: TICKET_INCLUDE_ONE,
-      });
+      const [updatedTicket] = await Promise.all([
+        this.prisma.ticket.update({
+          where: { id },
+          data: { ...updateTicketDto, updatedById: user.id },
+          include: TICKET_INCLUDE_ONE,
+        }),
+        this.createLog({
+          ticketId: id,
+          message: `Ticket updated by ${user.username}`,
+          createdById: user.id,
+          logTypeId: TicketLogType.Updated,
+        }),
+      ]);
 
       return this.excludeFields(updatedTicket);
     } catch (error) {
@@ -122,11 +138,19 @@ export class TicketService {
           message: `[ERROR] Ticket with id ${id} is already disabled`,
         });
 
-      const updatedTicket = await this.prisma.ticket.update({
-        where: { id },
-        data: { deletedAt: new Date(), deletedById: user.id },
-        include: TICKET_INCLUDE_ONE,
-      });
+      const [updatedTicket] = await Promise.all([
+        this.prisma.ticket.update({
+          where: { id },
+          data: { deletedAt: new Date(), deletedById: user.id },
+          include: TICKET_INCLUDE_ONE,
+        }),
+        this.createLog({
+          ticketId: id,
+          message: `Ticket deleted by ${user.username}`,
+          createdById: user.id,
+          logTypeId: TicketLogType.Deleted,
+        }),
+      ]);
 
       return this.excludeFields(updatedTicket);
     } catch (error) {
@@ -145,11 +169,19 @@ export class TicketService {
           message: `[ERROR] Ticket with id ${id} is already enabled`,
         });
 
-      const updatedTicket = await this.prisma.ticket.update({
-        where: { id },
-        data: { deletedAt: null, deletedById: null, updatedById: user.id },
-        include: TICKET_INCLUDE_ONE,
-      });
+      const [updatedTicket] = await Promise.all([
+        this.prisma.ticket.update({
+          where: { id },
+          data: { deletedAt: null, deletedById: null, updatedById: user.id },
+          include: TICKET_INCLUDE_ONE,
+        }),
+        this.createLog({
+          ticketId: id,
+          message: `Ticket restored by ${user.username}`,
+          createdById: user.id,
+          logTypeId: TicketLogType.Restored,
+        }),
+      ]);
 
       return this.excludeFields(updatedTicket);
     } catch (error) {
@@ -170,5 +202,9 @@ export class TicketService {
 
   private excludeFields(ticket: Ticket): TicketResponse {
     return ObjectManipulator.exclude<Ticket>(ticket, EXCLUDE_FIELDS) as TicketResponse;
+  }
+
+  private async createLog(data: CreateTicketLog) {
+    await this.prisma.ticketLog.create({ data });
   }
 }

@@ -1,4 +1,4 @@
-import { Catalog } from 'src/catalog/interfaces';
+import { Catalog, TicketLogType } from 'src/catalog/interfaces';
 import { Base } from 'src/common';
 
 export interface TicketResponse extends Base {
@@ -8,4 +8,11 @@ export interface TicketResponse extends Base {
   priority: Catalog;
   status: Catalog;
   department: Catalog;
+}
+
+export interface CreateTicketLog {
+  message: string;
+  createdById: string;
+  logTypeId: TicketLogType;
+  ticketId: string;
 }

@@ -134,7 +134,7 @@ model TicketLog {
   createdAt   DateTime      @default(now()) @map("created_at")
   deletedAt   DateTime?     @map("deleted_at")
   createdById String        @map("created_by_id")
-  deletedById String        @map("deleted_by_id")
+  deletedById String?       @map("deleted_by_id")
   message     String
   ticketId    String
   ticket      Ticket        @relation(fields: [ticketId], references: [id])

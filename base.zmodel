@@ -17,7 +17,7 @@ abstract model BaseLog {
   deletedAt   DateTime? @map('deleted_at')
 
   createdById String    @map('created_by_id')
-  deletedById String    @map('deleted_by_id')
+  deletedById String?   @map('deleted_by_id')
 }
 
 abstract model BaseCatalog {

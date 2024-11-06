@@ -40,4 +40,9 @@ export enum TicketLogType {
   PriorityChange = 3,
   CategoryChange = 4,
   AssigneeChange = 5,
+  Attachment = 6,
+  Created = 7,
+  Updated = 8,
+  Deleted = 9,
+  Restored = 10,
 }

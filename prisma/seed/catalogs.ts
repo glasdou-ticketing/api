@@ -2,23 +2,27 @@ import { PrismaClient } from '@prisma/client';
 import { departments, ticketCategories, ticketLogType, ticketPriorities, ticketStatuses } from './data';
 
 export const catalogSeed = async (prisma: PrismaClient) => {
-  await prisma.department.createMany({
-    data: departments.map((name, index) => ({ id: index + 1, name })),
-  });
+  const data: { items: string[]; model: any }[] = [
+    { items: departments, model: prisma.department },
+    { items: ticketCategories, model: prisma.ticketCategory },
+    { items: ticketPriorities, model: prisma.ticketPriority },
+    { items: ticketStatuses, model: prisma.ticketStatus },
+    { items: ticketLogType, model: prisma.ticketLogType },
+  ];
 
-  await prisma.ticketCategory.createMany({
-    data: ticketCategories.map((name, index) => ({ id: index + 1, name })),
-  });
+  const upserts = data.flatMap(({ items, model }) =>
+    items.map((name, index) =>
+      model.upsert({
+        where: { id: index + 1 },
+        update: { name },
+        create: { id: index + 1, name },
+      }),
+    ),
+  );
 
-  await prisma.ticketPriority.createMany({
-    data: ticketPriorities.map((name, index) => ({ id: index + 1, name })),
-  });
-
-  await prisma.ticketStatus.createMany({
-    data: ticketStatuses.map((name, index) => ({ id: index + 1, name })),
-  });
-
-  await prisma.ticketLogType.createMany({
-    data: ticketLogType.map((name, index) => ({ id: index + 1, name })),
-  });
+  try {
+    await prisma.$transaction(upserts);
+  } catch (error) {
+    console.error('Error seeding the catalog:', error);
+  }
 };
