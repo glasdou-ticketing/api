@@ -56,7 +56,9 @@ export class AuthService {
 
       const tokenSigned = this.signToken({ id: user.id });
 
-      return { user: user, token: tokenSigned };
+      ObjectManipulator.safeDelete(user, 'password');
+
+      return { user, token: tokenSigned };
     } catch (error) {
       this.exHandler.process(error);
     }
