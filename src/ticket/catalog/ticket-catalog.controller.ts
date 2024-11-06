@@ -37,7 +37,7 @@ export class TicketCatalogController {
     }
 
     const response = await fetchFunction();
-    await this.cacheManager.set(cacheKey, response, 6.048e8); // 1 week
+    await this.cacheManager.set(cacheKey, response, -1); // Cache forever
 
     return response;
   }
