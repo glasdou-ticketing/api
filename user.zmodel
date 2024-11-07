@@ -23,7 +23,7 @@ model User extends Base {
   deletedBy            User?           @relation("UserDeleter", fields: [deletedById], references: [id])
   deleterOf            User[]          @relation("UserDeleter")
 
-  departmentId         Int
+  departmentId         Int             @map("department_id")
   department           Department      @relation(fields: [departmentId], references: [id])
 
   ticketCreator        Ticket[]        @relation("TicketCreator")

@@ -37,7 +37,7 @@ model User {
   updaterOf            User[]          @relation("UserUpdater")
   deletedBy            User?           @relation("UserDeleter", fields: [deletedById], references: [id])
   deleterOf            User[]          @relation("UserDeleter")
-  departmentId         Int
+  departmentId         Int             @map("department_id")
   department           Department      @relation(fields: [departmentId], references: [id])
   ticketCreator        Ticket[]        @relation("TicketCreator")
   ticketUpdater        Ticket[]        @relation("TicketUpdater")
@@ -70,15 +70,16 @@ model Ticket {
   deletedById  String?         @map("deleted_by_id")
   title        String          @db.VarChar(500)
   description  String          @db.Text()
-  categoryId   Int
+  issueNumber  Int             @default(autoincrement()) @map("issue_number")
+  categoryId   Int             @map("category_id")
   category     TicketCategory  @relation(fields: [categoryId], references: [id])
-  priorityId   Int
+  priorityId   Int             @map("priority_id")
   priority     TicketPriority  @relation(fields: [priorityId], references: [id])
-  statusId     Int
+  statusId     Int             @map("status_id")
   status       TicketStatus    @relation(fields: [statusId], references: [id])
   comments     TicketComment[]
   logs         TicketLog[]
-  departmentId Int
+  departmentId Int             @map("department_id")
   department   Department      @relation(fields: [departmentId], references: [id])
   createdBy    User            @relation("TicketCreator", fields: [createdById], references: [id])
   updatedBy    User?           @relation("TicketUpdater", fields: [updatedById], references: [id])
@@ -111,8 +112,8 @@ model TicketComment {
   createdById String    @map("created_by_id")
   updatedById String?   @map("updated_by_id")
   deletedById String?   @map("deleted_by_id")
-  ticketId    String
-  ticket      Ticket    @relation(fields: [ticketId], references: [id])
+  ticketId    String    @map("ticket_id")
+  ticket      Ticket    @relation(fields: [ticketId], references: [id], onDelete: Cascade)
   comment     String
   createdBy   User      @relation("TicketCommentCreator", fields: [createdById], references: [id])
   updatedBy   User?     @relation("TicketCommentUpdater", fields: [updatedById], references: [id])
@@ -136,9 +137,9 @@ model TicketLog {
   createdById String        @map("created_by_id")
   deletedById String?       @map("deleted_by_id")
   message     String
-  ticketId    String
-  ticket      Ticket        @relation(fields: [ticketId], references: [id])
-  logTypeId   Int
+  ticketId    String        @map("ticket_id")
+  ticket      Ticket        @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  logTypeId   Int           @map("log_type_id")
   logType     TicketLogType @relation(fields: [logTypeId], references: [id])
   createdBy   User          @relation("TicketLogCreator", fields: [createdById], references: [id])
   deletedBy   User?         @relation("TicketLogDeleter", fields: [deletedById], references: [id])
